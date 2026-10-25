@@ -1,0 +1,163 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SimpleVerifier API",
+    "version": "1.0.0",
+    "description": "Verify an email address (syntax, domain, disposable provider and a live SMTP mailbox check) or validate a phone number against its country's numbering plan, with one HTTP call.\n\nStatuses: `valid` means the recipient's mail server confirmed the mailbox exists. `risky` means delivery could not be confirmed (catch-all domain, role address, provider that hides mailbox status, server that would not answer, or mailbox checks unavailable). `invalid` means it will bounce or is a throwaway address. Only `valid` is a confirmation.\n\nThe phone endpoint checks format and numbering-plan line type. It never confirms that a number is in service.\n\nAPI access is included in selected paid plans (see https://simpleverifier.com/pricing). A key on a plan without API access gets a 402 that says so. Each key can make 120 calls a minute.",
+    "contact": { "name": "SimpleVerifier Team", "url": "https://simpleverifier.com/contact" },
+    "termsOfService": "https://simpleverifier.com/terms",
+    "x-logo": { "url": "https://simpleverifier.com/icon.png" }
+  },
+  "externalDocs": { "description": "API docs", "url": "https://simpleverifier.com/docs/api" },
+  "servers": [{ "url": "https://simpleverifier.com/api/v1" }],
+  "security": [{ "bearerAuth": [] }],
+  "tags": [
+    { "name": "Email", "description": "Email address verification" },
+    { "name": "Phone", "description": "Phone number format and line type" },
+    { "name": "Account", "description": "Key and plan checks" }
+  ],
+  "paths": {
+    "/verify": {
+      "get": {
+        "tags": ["Email"],
+        "operationId": "verifyEmail",
+        "summary": "Verify an email address",
+        "description": "Runs syntax, domain, disposable and live mailbox (SMTP) checks in one call. A slow mail server can make a call take up to about 30 seconds.",
+        "parameters": [
+          { "name": "email", "in": "query", "required": true, "schema": { "type": "string", "format": "email" }, "example": "jane@company.com" }
+        ],
+        "responses": {
+          "200": { "description": "Verdict", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailResult" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "402": { "$ref": "#/components/responses/PaymentRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      },
+      "post": {
+        "tags": ["Email"],
+        "operationId": "verifyEmailPost",
+        "summary": "Verify an email address (JSON body)",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "type": "object", "required": ["email"], "properties": { "email": { "type": "string", "format": "email", "example": "jane@company.com" } } } } }
+        },
+        "responses": {
+          "200": { "description": "Verdict", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EmailResult" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "402": { "$ref": "#/components/responses/PaymentRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/phone": {
+      "get": {
+        "tags": ["Phone"],
+        "operationId": "checkPhone",
+        "summary": "Validate a phone number",
+        "description": "Checks the number against its country's numbering plan and returns the E.164 form, country and numbering-plan line type. When the account includes live phone lookups, a valid number also gets a live carrier lookup (carrier name and real line type) unless `live=false`. This endpoint never says whether a number is in service.",
+        "parameters": [
+          { "name": "phone", "in": "query", "required": true, "schema": { "type": "string" }, "example": "07911 123456" },
+          { "name": "country", "in": "query", "required": false, "schema": { "type": "string", "minLength": 2, "maxLength": 2, "default": "US" }, "description": "Two-letter country code for numbers written without a leading +" },
+          { "name": "live", "in": "query", "required": false, "schema": { "type": "boolean", "default": true }, "description": "Run the live carrier lookup when the plan includes it" }
+        ],
+        "responses": {
+          "200": { "description": "Result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PhoneResult" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "402": { "$ref": "#/components/responses/PaymentRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      },
+      "post": {
+        "tags": ["Phone"],
+        "operationId": "checkPhonePost",
+        "summary": "Validate a phone number (JSON body)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["phone"],
+                "properties": {
+                  "phone": { "type": "string", "example": "+44 7911 123456" },
+                  "country": { "type": "string", "default": "US" },
+                  "live": { "type": "boolean", "default": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Result", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PhoneResult" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "402": { "$ref": "#/components/responses/PaymentRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "tags": ["Account"],
+        "operationId": "getMe",
+        "summary": "Test an API key",
+        "description": "Confirms the key works and returns the plan, without spending a verification. Integrations use this as their connection test.",
+        "responses": {
+          "200": {
+            "description": "Key accepted",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean" }, "email": { "type": "string" }, "plan": { "type": "string" } } } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "402": { "$ref": "#/components/responses/PaymentRequired" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "description": "Your key from https://simpleverifier.com/api-keys (starts with sv_live_). `X-API-Key: <key>` also works." }
+    },
+    "schemas": {
+      "EmailResult": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string" },
+          "status": { "type": "string", "enum": ["valid", "risky", "invalid"] },
+          "reason": { "type": "string", "example": "Mailbox exists" },
+          "send_advice": { "type": "string", "enum": ["safe", "care", "retry", "do_not_send"] },
+          "reason_detail": { "type": "string" },
+          "mailbox_checked": { "type": "boolean", "description": "Whether live mailbox checks were available for this call" }
+        },
+        "additionalProperties": true
+      },
+      "PhoneResult": {
+        "type": "object",
+        "properties": {
+          "phone_status": { "type": "string", "example": "valid" },
+          "phone_e164": { "type": "string", "example": "+447911123456" },
+          "phone_country": { "type": "string" },
+          "phone_type": { "type": "string", "description": "Line type from the numbering plan (free on every plan)" },
+          "phone_carrier": { "type": "string", "description": "Only when live_lookup is true" },
+          "phone_line_type": { "type": "string", "description": "Only when live_lookup is true" },
+          "live_lookup": { "type": "boolean" }
+        },
+        "additionalProperties": true
+      },
+      "Error": { "type": "object", "properties": { "error": { "type": "string" } } }
+    },
+    "responses": {
+      "BadRequest": { "description": "The email or phone parameter is missing", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Unauthorized": { "description": "The API key is missing, wrong or revoked", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "PaymentRequired": { "description": "The key's plan does not include the API, or the subscription is not active", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "RateLimited": { "description": "More than 120 calls a minute on one key", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Unavailable": { "description": "The verification service is briefly unavailable; retry with backoff", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+    }
+  }
+}

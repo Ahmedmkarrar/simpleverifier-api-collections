@@ -1,0 +1,128 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_source": "simpleverifier",
+  "resources": [
+    {
+      "_type": "workspace",
+      "_id": "wrk_sv",
+      "name": "SimpleVerifier API",
+      "scope": "collection"
+    },
+    {
+      "_type": "environment",
+      "_id": "env_sv",
+      "parentId": "wrk_sv",
+      "name": "Base",
+      "data": {
+        "baseUrl": "https://simpleverifier.com",
+        "apiKey": "sv_live_REPLACE_ME"
+      }
+    },
+    {
+      "_type": "request",
+      "_id": "req_sv_0",
+      "parentId": "wrk_sv",
+      "name": "Verify email (GET)",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/api/v1/verify",
+      "parameters": [
+        {
+          "name": "email",
+          "value": "jane@company.com"
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.apiKey }}"
+        }
+      ]
+    },
+    {
+      "_type": "request",
+      "_id": "req_sv_1",
+      "parentId": "wrk_sv",
+      "name": "Verify email (POST)",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/api/v1/verify",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.apiKey }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"jane@company.com\"\n}"
+      }
+    },
+    {
+      "_type": "request",
+      "_id": "req_sv_2",
+      "parentId": "wrk_sv",
+      "name": "Validate phone (GET)",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/api/v1/phone",
+      "parameters": [
+        {
+          "name": "phone",
+          "value": "07911 123456"
+        },
+        {
+          "name": "country",
+          "value": "GB"
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.apiKey }}"
+        }
+      ]
+    },
+    {
+      "_type": "request",
+      "_id": "req_sv_3",
+      "parentId": "wrk_sv",
+      "name": "Validate phone (POST)",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/api/v1/phone",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.apiKey }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"phone\": \"07911 123456\",\n  \"country\": \"GB\",\n  \"live\": false\n}"
+      }
+    },
+    {
+      "_type": "request",
+      "_id": "req_sv_4",
+      "parentId": "wrk_sv",
+      "name": "Account: key and plan check",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/api/v1/me",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.apiKey }}"
+        }
+      ]
+    }
+  ]
+}
